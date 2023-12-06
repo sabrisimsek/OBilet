@@ -1,0 +1,163 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-3.7.1.min.js"></script>
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+    <div class="container" style=" margin: auto; width: 50%; margin-top:5%">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="col-md-6">
+                    <label>Nereden</label>
+                    <input type="search" id="from-search" onkeyup="search(1)" placeholder="Kalkış noktası giriniz." data-value="" class="form-control" />
+                    <div id="from-result">
+
+                    </div>
+                </div>
+                <input class="form-control" type="button" onclick="change()" value="Değiştir" style="margin-left:60%; width:auto;">
+                <div class="col-md-6" style="margin-top :2%;">
+                    <label>Nereye</label>
+                    <input type="search" id="to-search" onkeyup="search(2)" placeholder="Varış noktası giriniz." data-value="" class="form-control" />
+                    <div id="to-result">
+
+                    </div>
+                </div>
+
+                <div class="col-md-6" style="margin-top :5%;">
+                    <div class="row">
+
+                        <div class="col-md-10" style="margin-top:3%;">
+                            <input type="date" id="date" class="form-control" />
+                        </div>
+                        <div class="col-md-2">
+                            <input class="form-control" onclick="AddOrExtractionDay(0)" type="button" value="Bugün" style="width:auto;">
+                            <input class="form-control" onclick="AddOrExtractionDay(1)" type="button" value="Yarın" style="width:auto;">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control" onclick="setForm()" type="button" value="Bileti Bul" style="margin:auto; width:auto;">
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+<script type='text/javascript'>
+
+    var dateTime = new Date();
+    var searchText = "";
+    function search(type) {
+
+        if (type == 1) {
+            searchText = document.getElementById("from-search").value
+        }
+        if (type == 2) {
+            searchText = document.getElementById("to-search").value
+        }
+
+        $.ajax({
+            url: "/BusLocation/GetBusLocation?text=" + searchText + "&" + "date=" + document.getElementById("date").value,
+            success: function (result) {
+                if (result != null) {
+                    var responseTepmlate = "<ul>";
+
+
+                    for (i = 0; i < result.length; i++) {
+                        responseTepmlate += '<li data-value="' + result[i].Id + '"onclick="setData(' + result[i].Id + ',\'' + result[i].Name + '\'' + ',' + type + ')">' + result[i].Name + '</li>';
+                    }
+                    responseTepmlate += "</ul>";
+                    if (type == 1) {
+                        document.getElementById("from-result").innerHTML = responseTepmlate;
+                    }
+                    if (type == 2) {
+                        document.getElementById("to-result").innerHTML = responseTepmlate;
+                    }
+                }
+                else {
+                    alert("Sonuç bulunamadı");
+                }
+            }
+        });
+    }
+
+    function setData(id, name, type) {
+        if (type == 1) {
+
+            var fromSearch = document.getElementById("from-search");
+            fromSearch.value = name;
+            fromSearch.setAttribute("data-value", id);
+            document.getElementById("from-result").innerHTML = "";
+        }
+        else {
+
+            var fromSearch = document.getElementById("to-search");
+            fromSearch.value = name;
+            fromSearch.setAttribute("data-value", id);
+            document.getElementById("to-result").innerHTML = "";
+        }
+    }
+
+    function change() {
+        var fromSearch = document.getElementById("from-search");
+        var toSearch = document.getElementById("to-search");
+        var fromName = fromSearch.value;
+        var toName = toSearch.value;
+        var fromValue = fromSearch.getAttribute("data-value");
+        var toValue = fromSearch.getAttribute("data-value");
+
+        fromSearch.value = toName;
+        toSearch.value = fromName
+        fromSearch.setAttribute("data-value", toValue);
+        toSearch.setAttribute("data-value", fromValue);
+
+    }
+
+    function AddOrExtractionDay(date) {
+        var dateTime = new Date();
+        if (date == 0) {
+
+            document.getElementById('date').valueAsDate = dateTime;
+        }
+        else {
+            dateTime.setDate(dateTime.getDate() + date);
+            document.getElementById('date').valueAsDate = dateTime;
+        }
+    }
+
+    $(document).ready(function () {
+
+        var dateTime = new Date();
+        document.getElementById('date').valueAsDate = dateTime;
+    });
+
+    function setForm() {
+        var originId = document.getElementById("from-search").getAttribute("data-value");
+        var destinationId = document.getElementById("to-search").getAttribute("data-value");
+        var departureDate = document.getElementById('date').value;
+        if (originId == null || originId === "" || destinationId == null || destinationId === "" || departureDate == null || departureDate === "") {
+            alert("Lütfen formu doldurunuz.")
+        }
+        else {
+            location.href = '/BusJourneys/GetBusJourney?departureDate=' + departureDate + '&destinationId=' + destinationId + '&originId=' + originId;
+        }
+
+    }
+
+
+</script>
+
